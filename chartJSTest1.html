@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chart.js Test 1</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <div> 
+        <canvas id="myChart"></canvas>
+    </div>
+</head>
+<body>
+    <script>
+        const ctx = document.getElementById('myChart');
+
+        var Data = d3.csv('Grad Numbers and Tuition by Year.csv')
+            .then(data=>{
+                console.log(data);
+                var length = Object.keys(data).length;
+                var index = 0;
+                var avgTutition = [];
+                data.forEach(e=>{
+                    console.log(e);
+                    avgTutition[index] = e['All Institutions Avg Tuition'];
+                    index = index + 1;
+                });
+
+                console.log(avgTutition);
+
+                var yearRange = ['1969-70', '1979-80', '1980-81', '1981-82',
+                                '1982-83', '1983-84','1984-85','1985-86','1986-87','1987-88',
+                                '1988-89','1989-90','1990-91',
+                                '1991-92','1992-93','1993-94','1994-95','1995-96','1996-97',
+                                '1997-98','1998-99','1999-2000','2000-01','2001-02','2002-03',
+                                '2003-04','2004-05','2005-06','2006-07','2007-08','2008-09',
+                                '2009-10','2010-11','2011-12','2012-13','2013-14','2014-15',
+                                '2015-16','2016-17','2017-18','2018-19','2019-20','2020-21']
+
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: yearRange,
+                        datasets: [{
+                            label: '# of Votes',
+                            data: avgTutition,
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                        }
+                    }
+                    });
+            });
+    
+      </script>
+</body>
+</html>
