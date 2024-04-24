@@ -14,27 +14,35 @@
             integrity= 
     "sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
             crossorigin=""></script> 
+    <script src="pieChart.js"></script>  
+    <script src="map.js"></script>
+    <script src="sheet2Viz.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 </head>
-<body>
-    <div class="content">
-        <h1>Welcome to Operation College Charizard</h1>
-        <p>This is our generic website "frame" for our CS3533 Project.</p>
+<body onload="main(), run()" class="flex-container">
+    <div class="flex-top">
+        <h2 class="heading"> Degrees and Average Tuition Cost by State </h2> 
+        <select class="select-dropdown" name="dropdown"> 
+            <option> Select any monument </option> 
+        </select>          
+        <div id="mymap"> </div>   
+        <button class="search-btn"> Search </button>        
     </div>
-    
-    <h2 class="heading"> Degrees and Average Tuition Cost by State </h2> 
-    <div id="mymap"> </div> 
-    <div class="button-group flex-style"> 
-        <!-- <div class="component1"> 
+
+    <div class="flex-top">
+        <div class="flex-bottom">
+            <select id="state-select"></select>
+            <div id="pie-chart"></div>      
+        </div>
+        <div class="flex-bottom">
+            <canvas id="myChart"></canvas>
+        </div>
+    </div>         
+</body>
+</html>
+ <!-- <div class="button-group flex-style"> 
+         <div class="component1"> 
             <button class="map-zoom-out-btn">Map Zoom Out</button> 
         </div>  -->
         <!-- <div class="component2"> 
-            <select class="select-dropdown" name="dropdown"> 
-                <option> Select any monument </option> 
-            </select> 
-            <button class="search-btn"> Search </button> 
-        </div>  -->
-    </div> 
-    
-    <script src="map.js"></script>
-</body>
-</html>
