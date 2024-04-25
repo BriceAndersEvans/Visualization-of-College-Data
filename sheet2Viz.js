@@ -102,6 +102,12 @@ function run() {
         ],
       },
       options: {
+        plugins: {
+          title: {
+              display: true,
+              text: 'Number of Graduates and Tuition Cost by Year'
+          }
+        },
         scales: {
           x: {
             title: {
