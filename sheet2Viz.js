@@ -2,7 +2,6 @@ function run() {
   const ctx = document.getElementById("myChart");
 
   var Data = d3.csv("Grad Numbers and Tuition by Year.csv").then((data) => {
-    console.log(data);
     var length = Object.keys(data).length;
     var index = 0;
     var avgTuition = [];
@@ -19,8 +18,6 @@ function run() {
       gradMasters[index] = e["Graduates with Masters Degree"];
       index = index + 1;
     });
-
-    console.log(avgTuition);
 
     var yearRange = [
       "1969-70",

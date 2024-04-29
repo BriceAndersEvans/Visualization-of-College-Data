@@ -22,14 +22,17 @@ L.geoJson(statesData).addTo(map);
 
 	// get color depending on population density value
 	function getColor(d) {
-		return d > 1000 ? '#800026' :
-			d > 500  ? '#BD0026' :
-			d > 200  ? '#E31A1C' :
-			d > 100  ? '#FC4E2A' :
-			d > 50   ? '#FD8D3C' :
-			d > 20   ? '#FEB24C' :
-			d > 10   ? '#FED976' : '#FFEDA0';
+		return d > 50000 ? '#800026' :
+			d > 40000  ? '#BD0026' :
+			d > 30000  ? '#E31A1C' :
+			d > 20000  ? '#FC4E2A' :
+			d > 10000   ? '#FD8D3C' : '#FFEDA0';
 	}
+
+    function getStateTuition(stateName)
+    {
+        return 0;
+    }
 
 	function style(feature) {
 		return {
@@ -59,8 +62,8 @@ L.geoJson(statesData).addTo(map);
 
 	/* global statesData */
 	const geojson = L.geoJson(statesData, {
-		style,
-		onEachFeature
+		style: style,
+		onEachFeature: onEachFeature
 	}).addTo(map);
 
 	function resetHighlight(e) {
@@ -86,13 +89,20 @@ function createPrivateInstitutionMarkers() {
   ourData.forEach(data => {
       let state = data.state;
       let privateInstitution = parseFloat(data.privateInstitution);
+      let publicInstitution = parseFloat(data.publicInstitution);
+
+      let USDollar = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        });
 
       // Check if latitude and longitude are valid numbers
       if (!isNaN(data.latitude) && !isNaN(data.longitude)) {
 
           // makes a marker variable that if clicked on will show the private institution data based on state
           let marker = L.marker([data.latitude, data.longitude])
-              .bindPopup(`<h3>${state}</h3><p>Private Institution: ${privateInstitution}</p>`)
+              .bindPopup(`<h3>${state}</h3><p>Public Institution: ${USDollar.format(publicInstitution)}</p>
+                        <p>Private Institution: ${USDollar.format(privateInstitution)}</p>`)
               .addTo(map);
       } else {
         //error to handle the invalid data for lat/long 3 of them
@@ -100,6 +110,26 @@ function createPrivateInstitutionMarkers() {
       }
   });
 }
+
+var legend = L.control({position: 'bottomright'});
+
+legend.onAdd = function (map) {
+
+    var div = L.DomUtil.create('div', 'info legend'),
+        grades = [0, 10000, 20000, 30000, 40000, 50000],
+        labels = [];
+
+    // loop through our density intervals and generate a label with a colored square for each interval
+    for (var i = 0; i < grades.length; i++) {
+        div.innerHTML +=
+            '<i style="background:' + getColor(grades[i] + 1) + '"></i> ' +
+            grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+    }
+
+    return div;
+};
+
+legend.addTo(map);
 
 
 fetch('CostAndDegreesGrantedByState.csv')
@@ -129,7 +159,7 @@ fetch('CostAndDegreesGrantedByState.csv')
         let socialSciences = parseFloat(rowData[12]);
         let latitude = parseFloat(rowData[13]); 
         let longitude = parseFloat(rowData[14]); 
-
+    
 
         // Store the extracted data in your desired format
         ourData.push({
@@ -152,7 +182,7 @@ fetch('CostAndDegreesGrantedByState.csv')
 
       });
 
-    console.log(ourData); // You can now use this data for further processing
+    console.log("Our data: " + ourData); // You can now use this data for further processing
 
     createPrivateInstitutionMarkers();
 })
