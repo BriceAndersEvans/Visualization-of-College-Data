@@ -2,192 +2,182 @@ document.addEventListener('DOMContentLoaded', (event) =>
 {
     console.log('Document loaded and script running');
 
+    // map variable with a set view to visualize the United States
+    let map = L.map('mymap').setView([37.8, -96], 4);
+
+    let ourData = []; 
+
+    //A link to the mapping software 
+    var tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(map);
+
+    L.geoJson(statesData).addTo(map);
+
+    /* global statesData */
+    const geojson = L.geoJson(statesData, {
+        style: style,
+        onEachFeature: onEachFeature
+    }).addTo(map);
 
 
+    var legend = L.control({position: 'bottomright'});
 
-// map variable with a set view to visualize the United States
-let map = L.map('mymap').setView([37.8, -96], 4);
+    legend.onAdd = function (map) {
 
-let ourData = []; 
+        var div = L.DomUtil.create('div', 'info legend'),
+            grades = [0, 5000, 10000, 15000, 20000, 25000, 30000],
+            labels = [];
+
+        // loop through our density intervals and generate a label with a colored square for each interval
+        for (var i = 0; i < grades.length; i++) {
+            div.innerHTML +=
+                '<i style="background:' + getColor(grades[i] + 1) + '"></i> ' +
+                grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+        }
+
+        return div;
+    };
+
+    legend.addTo(map);
 
 
-//A link to the mapping software 
-var tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-}).addTo(map);
+    fetch('CostAndDegreesGrantedByState.csv')
+    .then((response) => response.text())
+    .then((data) => {
+        //split csv data into rows
+        let rows = data.split('\n');
+        //getting the column names
+        let columns = rows[0].split(',');
+        
+        rows.shift();
+        // Processing each row
+        rows.forEach(row => {
+            let rowData = row.split(',');
+            let state = rowData[0];
+            let privateInstitution = parseFloat(rowData[1]);
+            let publicInstitution = parseFloat(rowData[2]);
+            let business = parseFloat(rowData[3]);
+            let computerAndInfo = parseFloat(rowData[4]);
+            let education = parseFloat(rowData[5]);
+            let engineering = parseFloat(rowData[6]);
+            let healthProfessions = parseFloat(rowData[7]);
+            let humanities = parseFloat(rowData[8]);
+            let naturalSciences = parseFloat(rowData[9]);
+            let otherFields = parseFloat(rowData[10]);
+            let psychology = parseFloat(rowData[11]);
+            let socialSciences = parseFloat(rowData[12]);
+            let latitude = parseFloat(rowData[13]); 
+            let longitude = parseFloat(rowData[14]); 
+        
 
-L.geoJson(statesData).addTo(map);
+            // Store the extracted data in your desired format
+            ourData.push({
+                state,
+                privateInstitution,
+                publicInstitution,
+                business,
+                computerAndInfo,
+                education,
+                engineering,
+                healthProfessions,
+                humanities,
+                naturalSciences,
+                otherFields,
+                psychology,
+                socialSciences,
+                latitude,
+                longitude
+            });
 
+        });
 
-	// get color depending on population density value
-	function getColor(d) {
-		return d > 30000 ? '#800026' :
-			d > 25000  ? '#BD0026' :
-			d > 20000  ? '#E31A1C' :
-			d > 15000  ? '#FC4E2A' :
-			d > 10000   ? '#FD8D3C' :
+        console.log("Our data: " + ourData); // You can now use this data for further processing
+
+        createPrivateInstitutionMarkers();
+    })
+    .catch((error) => alert(error));
+
+    // Function to create markers for private institutions
+    function createPrivateInstitutionMarkers() {
+        ourData.forEach(data => {
+            let state = data.state;
+            let privateInstitution = parseFloat(data.privateInstitution);
+            let publicInstitution = parseFloat(data.publicInstitution);
+
+            let USDollar = new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                });
+
+            // Check if latitude and longitude are valid numbers
+            if (!isNaN(data.latitude) && !isNaN(data.longitude)) {
+
+                // makes a marker variable that if clicked on will show the private institution data based on state
+                let marker = L.marker([data.latitude, data.longitude])
+                    .bindPopup(`<h3>${state}</h3><p>Public Institution: ${USDollar.format(publicInstitution)}</p>
+                                <p>Private Institution: ${USDollar.format(privateInstitution)}</p>`)
+                    .addTo(map);
+            } else {
+                //error to handle the invalid data for lat/long 3 of them
+                console.error(`Invalid latitude or longitude for state: ${state}`);
+            }
+        });
+    }
+
+    function resetHighlight(e) {
+        geojson.resetStyle(e.target);
+        info.update();
+    }
+
+    function zoomToFeature(e) {
+        map.fitBounds(e.target.getBounds());
+    }
+
+    function onEachFeature(feature, layer) {
+        layer.on({
+            mouseover: highlightFeature,
+            mouseout: resetHighlight,
+            click: zoomToFeature
+        });
+    }
+
+    // get color depending on population density value
+    function getColor(d) {
+        return d > 30000 ? '#800026' :
+            d > 25000  ? '#BD0026' :
+            d > 20000  ? '#E31A1C' :
+            d > 15000  ? '#FC4E2A' :
+            d > 10000   ? '#FD8D3C' :
             d > 5000   ? '#FD8D3C' : '#FFEDA0';
-	}
-
-    function getStateTuition(stateName)
-    {
-        return 0;
     }
 
-	function style(feature) {
-		return {
-			weight: 2,
-			opacity: 1,
-			color: 'white',
-			dashArray: '3',
-			fillOpacity: 0.7,
-			fillColor: getColor(feature.properties.density)
-		};
-	}
-
-	function highlightFeature(e) {
-		const layer = e.target;
-
-		layer.setStyle({
-			weight: 5,
-			color: '#666',
-			dashArray: '',
-			fillOpacity: 0.7
-		});
-
-		layer.bringToFront();
-
-		info.update(layer.feature.properties);
-	}
-
-	/* global statesData */
-	const geojson = L.geoJson(statesData, {
-		style: style,
-		onEachFeature: onEachFeature
-	}).addTo(map);
-
-	function resetHighlight(e) {
-		geojson.resetStyle(e.target);
-		info.update();
-	}
-
-	function zoomToFeature(e) {
-		map.fitBounds(e.target.getBounds());
-	}
-
-	function onEachFeature(feature, layer) {
-		layer.on({
-			mouseover: highlightFeature,
-			mouseout: resetHighlight,
-			click: zoomToFeature
-		});
-	}
-
-
-// Function to create markers for private institutions
-function createPrivateInstitutionMarkers() {
-  ourData.forEach(data => {
-      let state = data.state;
-      let privateInstitution = parseFloat(data.privateInstitution);
-      let publicInstitution = parseFloat(data.publicInstitution);
-
-      let USDollar = new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        });
-
-      // Check if latitude and longitude are valid numbers
-      if (!isNaN(data.latitude) && !isNaN(data.longitude)) {
-
-          // makes a marker variable that if clicked on will show the private institution data based on state
-          let marker = L.marker([data.latitude, data.longitude])
-              .bindPopup(`<h3>${state}</h3><p>Public Institution: ${USDollar.format(publicInstitution)}</p>
-                        <p>Private Institution: ${USDollar.format(privateInstitution)}</p>`)
-              .addTo(map);
-      } else {
-        //error to handle the invalid data for lat/long 3 of them
-          console.error(`Invalid latitude or longitude for state: ${state}`);
-      }
-  });
-}
-
-var legend = L.control({position: 'bottomright'});
-
-legend.onAdd = function (map) {
-
-    var div = L.DomUtil.create('div', 'info legend'),
-        grades = [0, 5000, 10000, 15000, 20000, 25000, 30000],
-        labels = [];
-
-    // loop through our density intervals and generate a label with a colored square for each interval
-    for (var i = 0; i < grades.length; i++) {
-        div.innerHTML +=
-            '<i style="background:' + getColor(grades[i] + 1) + '"></i> ' +
-            grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+    function style(feature) {
+        return {
+            weight: 2,
+            opacity: 1,
+            color: 'white',
+            dashArray: '3',
+            fillOpacity: 0.7,
+            fillColor: getColor(feature.properties.density)
+        };
     }
 
-    return div;
-};
+    function highlightFeature(e) {
+        const layer = e.target;
 
-legend.addTo(map);
-
-
-fetch('CostAndDegreesGrantedByState.csv')
-.then((response) => response.text())
-.then((data) => {
-    //split csv data into rows
-    let rows = data.split('\n');
-    //getting the column names
-    let columns = rows[0].split(',');
-    
-    rows.shift();
-    // Processing each row
-    rows.forEach(row => {
-        let rowData = row.split(',');
-        let state = rowData[0];
-        let privateInstitution = parseFloat(rowData[1]);
-        let publicInstitution = parseFloat(rowData[2]);
-        let business = parseFloat(rowData[3]);
-        let computerAndInfo = parseFloat(rowData[4]);
-        let education = parseFloat(rowData[5]);
-        let engineering = parseFloat(rowData[6]);
-        let healthProfessions = parseFloat(rowData[7]);
-        let humanities = parseFloat(rowData[8]);
-        let naturalSciences = parseFloat(rowData[9]);
-        let otherFields = parseFloat(rowData[10]);
-        let psychology = parseFloat(rowData[11]);
-        let socialSciences = parseFloat(rowData[12]);
-        let latitude = parseFloat(rowData[13]); 
-        let longitude = parseFloat(rowData[14]); 
-    
-
-        // Store the extracted data in your desired format
-        ourData.push({
-            state,
-            privateInstitution,
-            publicInstitution,
-            business,
-            computerAndInfo,
-            education,
-            engineering,
-            healthProfessions,
-            humanities,
-            naturalSciences,
-            otherFields,
-            psychology,
-            socialSciences,
-            latitude,
-            longitude
+        layer.setStyle({
+            weight: 5,
+            color: '#666',
+            dashArray: '',
+            fillOpacity: 0.7
         });
 
-      });
+        layer.bringToFront();
 
-    console.log("Our data: " + ourData); // You can now use this data for further processing
-
-    createPrivateInstitutionMarkers();
-})
-.catch((error) => alert(error));
+        info.update(layer.feature.properties);
+    }
 
 });
 
@@ -245,4 +235,3 @@ var statesData = {"type":"FeatureCollection","features":[
     {"type":"Feature","id":"56","properties":{"name":"Wyoming","density":14584.413},"geometry":{"type":"Polygon","coordinates":[[[-109.080842,45.002073],[-105.91517,45.002073],[-104.058488,44.996596],[-104.053011,43.002989],[-104.053011,41.003906],[-105.728954,40.998429],[-107.919731,41.003906],[-109.04798,40.998429],[-111.047063,40.998429],[-111.047063,42.000709],[-111.047063,44.476286],[-111.05254,45.002073],[-109.080842,45.002073]]]}},
     {"type":"Feature","id":"72","properties":{"name":"Puerto Rico","density":0},"geometry":{"type":"Polygon","coordinates":[[[-66.448338,17.984326],[-66.771478,18.006234],[-66.924832,17.929556],[-66.985078,17.973372],[-67.209633,17.956941],[-67.154863,18.19245],[-67.269879,18.362235],[-67.094617,18.515589],[-66.957694,18.488204],[-66.409999,18.488204],[-65.840398,18.433435],[-65.632274,18.367712],[-65.626797,18.203403],[-65.730859,18.186973],[-65.834921,18.017187],[-66.234737,17.929556],[-66.448338,17.984326]]]}}
     ]};
-    
